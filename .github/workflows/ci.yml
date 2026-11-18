@@ -1,0 +1,47 @@
+# Continuous integration for the Fabrickit workspace.
+name: CI
+
+# Run on pushes to master and on pull requests from any branch,
+# so a pull request is not checked twice.
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Read-only token: CI never writes to the repository.
+permissions:
+  contents: read
+
+# Keep colored Cargo output in the Actions log.
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Fail if any file is not formatted with rustfmt.
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo fmt --all --check
+
+  # Lint every crate and target; any warning fails the job.
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Reuse Cargo build output from earlier runs.
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  # Run the full test suite.
+  test:
+    # One OS for now; add windows-latest or macos-latest to test them too.
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      # Reuse Cargo build output from earlier runs.
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
