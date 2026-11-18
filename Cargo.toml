@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.80"
+repository = "https://github.com/Fabrickit/fabrickit"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+fabrickit-core = { path = "crates/fabrickit-core", version = "0.0.1" }
+fabrickit-net = { path = "crates/fabrickit-net", version = "0.0.1" }
+fabrickit-storage = { path = "crates/fabrickit-storage", version = "0.0.1" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
