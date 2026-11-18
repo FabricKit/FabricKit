@@ -1,4 +1,4 @@
-# Fabrickit
+# FabricKit
 
 Composable Rust crates for building distributed systems.
 

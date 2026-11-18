@@ -1,6 +1,6 @@
 [package]
 name = "fabrickit-core"
-description = "Shared types for Fabrickit crates."
+description = "Shared types for FabricKit crates."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

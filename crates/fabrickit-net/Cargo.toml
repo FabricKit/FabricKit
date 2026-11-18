@@ -1,6 +1,6 @@
 [package]
 name = "fabrickit-net"
-description = "Networking for Fabrickit: connect machines and exchange data."
+description = "Networking for FabricKit: connect machines and exchange data."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

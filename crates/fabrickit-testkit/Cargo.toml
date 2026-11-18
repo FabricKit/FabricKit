@@ -1,6 +1,6 @@
 [package]
 name = "fabrickit-testkit"
-description = "Deterministic test helpers for Fabrickit."
+description = "Deterministic test helpers for FabricKit."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -1,4 +1,4 @@
-//! Shared types used by every Fabrickit crate.
+//! Shared types used by every FabricKit crate.
 
 use std::fmt;
 

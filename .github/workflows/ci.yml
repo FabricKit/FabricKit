@@ -1,4 +1,4 @@
-# Continuous integration for the Fabrickit workspace.
+# Continuous integration for the FabricKit workspace.
 name: CI
 
 # Run on pushes to master and on pull requests from any branch,

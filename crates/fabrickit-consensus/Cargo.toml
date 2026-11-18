@@ -1,6 +1,6 @@
 [package]
 name = "fabrickit-consensus"
-description = "Consensus for Fabrickit: agreement between nodes."
+description = "Consensus for FabricKit: agreement between nodes."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

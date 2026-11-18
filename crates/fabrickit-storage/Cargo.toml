@@ -1,6 +1,6 @@
 [package]
 name = "fabrickit-storage"
-description = "Persistent, reliable storage for Fabrickit."
+description = "Persistent, reliable storage for FabricKit."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
