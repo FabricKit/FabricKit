@@ -1,10 +1,34 @@
 //! Deterministic test helpers: simulated network, clock and faults.
 
 use std::cell::Cell;
+use std::collections::VecDeque;
 use std::time::Duration;
 
-use fabrickit_core::Clock;
 pub use fabrickit_core::NodeId;
+use fabrickit_core::{Clock, Message};
+
+/// In-memory network that delivers messages in the order they were sent.
+#[derive(Debug, Default)]
+pub struct SimNetwork {
+    in_flight: VecDeque<Message>,
+}
+
+impl SimNetwork {
+    /// Creates an empty network.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Queues `msg` for delivery.
+    pub fn send(&mut self, msg: Message) {
+        self.in_flight.push_back(msg);
+    }
+
+    /// Removes and returns the oldest undelivered message, if any.
+    pub fn deliver_next(&mut self) -> Option<Message> {
+        self.in_flight.pop_front()
+    }
+}
 
 /// Clock whose time moves only when a test calls [`SimClock::advance`].
 ///
@@ -63,6 +87,31 @@ mod tests {
         let clock = SimClock::new();
         clock.advance(Duration::from_secs(3));
         assert_eq!(clock.now(), clock.now());
+    }
+
+    fn msg(from: u64, to: u64, payload: &[u8]) -> Message {
+        Message {
+            from: NodeId(from),
+            to: NodeId(to),
+            payload: payload.to_vec(),
+        }
+    }
+
+    #[test]
+    fn empty_network_delivers_nothing() {
+        assert_eq!(SimNetwork::new().deliver_next(), None);
+    }
+
+    #[test]
+    fn delivers_in_send_order() {
+        let mut net = SimNetwork::new();
+        net.send(msg(1, 2, b"a"));
+        net.send(msg(2, 3, b"b"));
+        net.send(msg(3, 1, b"c"));
+        assert_eq!(net.deliver_next(), Some(msg(1, 2, b"a")));
+        assert_eq!(net.deliver_next(), Some(msg(2, 3, b"b")));
+        assert_eq!(net.deliver_next(), Some(msg(3, 1, b"c")));
+        assert_eq!(net.deliver_next(), None);
     }
 
     #[test]
