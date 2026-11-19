@@ -1,6 +1,7 @@
 //! Shared types used by every FabricKit crate.
 
 use std::fmt;
+use std::time::Duration;
 
 /// Unique identifier of a node in a cluster.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -21,6 +22,33 @@ pub struct Message {
     pub to: NodeId,
     /// Opaque message bytes.
     pub payload: Vec<u8>,
+}
+
+/// Source of monotonic time.
+///
+/// Code that needs time takes a `Clock` instead of reading the system clock,
+/// so tests can control time.
+///
+/// # Example
+///
+/// ```
+/// use std::time::Duration;
+/// use fabrickit_core::Clock;
+///
+/// struct FixedClock(Duration);
+///
+/// impl Clock for FixedClock {
+///     fn now(&self) -> Duration {
+///         self.0
+///     }
+/// }
+///
+/// let clock = FixedClock(Duration::from_secs(5));
+/// assert_eq!(clock.now(), Duration::from_secs(5));
+/// ```
+pub trait Clock {
+    /// Time elapsed since the clock's start. Never decreases.
+    fn now(&self) -> Duration;
 }
 
 #[cfg(test)]
