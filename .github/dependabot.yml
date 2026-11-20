@@ -1,0 +1,20 @@
+version: 2
+
+updates:
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # Rust (Cargo)
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: chore
+      include: scope
