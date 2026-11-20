@@ -1,0 +1,44 @@
+# CodeRabbit configuration for FabricKit
+
+language: en-US
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  commit_status: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+
+  path_instructions:
+    - path: "**/*.rs"
+      instructions: |
+        Review Rust code for:
+        - Correctness, safety and potential runtime bugs.
+        - Ownership, borrowing and lifetime issues.
+        - Concurrency and async/await correctness.
+        - Race conditions, deadlocks and synchronization.
+        - Error handling and propagation.
+        - Unnecessary allocations and performance regressions.
+        - Public API design and backwards compatibility.
+        - Appropriate use of unsafe Rust.
+        - Idiomatic Rust practices.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        Review GitHub Actions workflows for security,
+        permissions, reliability and supply-chain risks.
+
+    - path: "**/Cargo.toml"
+      instructions: |
+        Review dependency choices, feature flags,
+        workspace configuration and version constraints.
+
+  path_filters:
+    - "!**/target/**"
+    - "!**/Cargo.lock"
+    - "!**/*.md"
+    - "!**/*.svg"
