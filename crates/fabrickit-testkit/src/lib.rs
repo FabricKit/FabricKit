@@ -20,16 +20,23 @@ impl SplitMix64 {
         z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
         z ^ (z >> 31)
     }
+
+    /// Uniform value in `[0, 1)` built from the top 53 bits.
+    fn next_f64(&mut self) -> f64 {
+        (self.next_u64() >> 11) as f64 / (1u64 << 53) as f64
+    }
 }
 
 /// In-memory network.
 ///
 /// [`SimNetwork::new`] delivers messages in send order.
-/// [`SimNetwork::with_seed`] delivers them in a random order fixed by the seed.
+/// [`SimNetwork::with_seed`] delivers them in a random order fixed by the seed,
+/// and can drop messages with [`SimNetwork::set_drop_rate`].
 #[derive(Debug, Default)]
 pub struct SimNetwork {
     in_flight: VecDeque<Message>,
     rng: Option<SplitMix64>,
+    drop_rate: f64,
 }
 
 impl SimNetwork {
@@ -44,11 +51,38 @@ impl SimNetwork {
         Self {
             in_flight: VecDeque::new(),
             rng: Some(SplitMix64(seed)),
+            drop_rate: 0.0,
         }
     }
 
-    /// Queues `msg` for delivery.
+    /// Sets the chance, from `0.0` to `1.0`, that [`SimNetwork::send`]
+    /// silently drops a message. Drops are decided by the seed.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `rate` is outside `0.0..=1.0`, or if `rate` is above zero on
+    /// a network made with [`SimNetwork::new`].
+    pub fn set_drop_rate(&mut self, rate: f64) {
+        assert!(
+            (0.0..=1.0).contains(&rate),
+            "drop rate must be between 0.0 and 1.0, got {rate}"
+        );
+        assert!(
+            rate == 0.0 || self.rng.is_some(),
+            "drop rate needs a network made with SimNetwork::with_seed"
+        );
+        self.drop_rate = rate;
+    }
+
+    /// Queues `msg` for delivery, unless the drop rate discards it.
     pub fn send(&mut self, msg: Message) {
+        if self.drop_rate > 0.0 {
+            if let Some(rng) = &mut self.rng {
+                if rng.next_f64() < self.drop_rate {
+                    return;
+                }
+            }
+        }
         self.in_flight.push_back(msg);
     }
 
@@ -189,6 +223,53 @@ mod tests {
     #[test]
     fn empty_seeded_network_delivers_nothing() {
         assert_eq!(SimNetwork::with_seed(1).deliver_next(), None);
+    }
+
+    fn delivered_with_drop_rate(seed: u64, rate: f64) -> Vec<Vec<u8>> {
+        let mut net = SimNetwork::with_seed(seed);
+        net.set_drop_rate(rate);
+        for i in 0..100u8 {
+            net.send(msg(1, 2, &[i]));
+        }
+        std::iter::from_fn(|| net.deliver_next())
+            .map(|m| m.payload)
+            .collect()
+    }
+
+    #[test]
+    fn zero_drop_rate_keeps_everything() {
+        assert_eq!(delivered_with_drop_rate(42, 0.0).len(), 100);
+    }
+
+    #[test]
+    fn full_drop_rate_drops_everything() {
+        assert!(delivered_with_drop_rate(42, 1.0).is_empty());
+    }
+
+    #[test]
+    fn partial_drop_rate_drops_some() {
+        let kept = delivered_with_drop_rate(42, 0.5).len();
+        assert!(kept > 0 && kept < 100, "kept {kept} of 100");
+    }
+
+    #[test]
+    fn same_seed_drops_same_messages() {
+        assert_eq!(
+            delivered_with_drop_rate(42, 0.5),
+            delivered_with_drop_rate(42, 0.5)
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "between 0.0 and 1.0")]
+    fn drop_rate_out_of_range_panics() {
+        SimNetwork::with_seed(1).set_drop_rate(1.5);
+    }
+
+    #[test]
+    #[should_panic(expected = "with_seed")]
+    fn drop_rate_on_unseeded_network_panics() {
+        SimNetwork::new().set_drop_rate(0.5);
     }
 
     #[test]
